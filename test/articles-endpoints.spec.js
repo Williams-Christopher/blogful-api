@@ -78,11 +78,13 @@ describe('GET /articles/:article_id', () => {
 describe('POST /articles', () => {
     it('creates an article, responding with 201 and the new article', function() {
         this.retries(3);
+        
         const newArticle = {
             title: 'Test new article',
             style: 'Listicle',
             content: 'Test new article content...'
         };
+        
         return supertest(app)
             .post('/articles')
             .send(newArticle)
@@ -104,5 +106,15 @@ describe('POST /articles', () => {
             );
             // Checkpoint also notes that we coul dhave used knex to check the database directly
             // for the POSTed article.
+    });
+
+    it(`responds with 400 and an error message when the 'title' is missing`, () => {
+        return supertest(app)
+            .post('/articles')
+            .send({
+                style: 'Listicle',
+                content: 'test new article content...'
+            })
+            .expect(400, {error: {message: `Missing 'title' in request body`}});
     });
 });
