@@ -16,11 +16,18 @@ articlesRouter.route('/')
     .post(jsonParser, (req, res, next) => {
         //res.status(201).send('stuff'); // enough to make the test pass but not what is needed
         // res.status(201).json({  // Still enough to make the test pass but not what is needed
-        //     ...req.body,        // Write the test to make the POST and then GET /srticles/:id
+        //     ...req.body,        // Write the test to make the POST and then GET /articles/:id
         //     id: 12              // with the id in the response.
         // });
         const { title, content, style } = req.body;
         const newArticle = { title, content, style };
+
+        for (const [key, value] of Object.entries(newArticle)) {
+            if(value == null) {
+                return res.status(400).json({error: {message: `Missing '${key}' in request body`}});
+            }
+        }
+
         ArticlesService.insertArticle(req.app.get('db'), newArticle)
             .then(article => {
                 res
