@@ -80,7 +80,7 @@ describe('GET /articles/:article_id', () => {
             const articleId = 123456;
             return supertest(app)
                 .get(`/articles/${articleId}`)
-                .expect(404, {error: {message: `Article doesn't exist`}});
+                .expect(404, {error: {message: `Article does not exist`}});
         });
     });
 
@@ -212,7 +212,7 @@ describe('POST /articles', () => {
     });
 });
 
-describe.only(`DELETE /articles/:article_id`, () => {
+describe(`DELETE /articles/:article_id`, () => {
     context(`Given there are articles in the database`,() => {
         const testArticles = makeArticlesArray();
 

@@ -67,7 +67,7 @@ articlesRouter.route('/:article_id')
             .catch(next);
     })
     .get((req, res, next) => {
-        res.json(serializeArticle(article));
+        res.json(serializeArticle(res.article));
     })
     .delete((req, res, next) => {
         ArticlesService.deleteArticle(req.app.get('db'), req.params.article_id)
