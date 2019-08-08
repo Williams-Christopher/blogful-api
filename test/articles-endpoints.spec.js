@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const knex = require('knex');
 const app = require('../src/app');
-const { makeArticlesArray } = require('./articles.fixtures');
+const { makeArticlesArray, makeMaliciousArticle } = require('./articles.fixtures');
 
 let db;
 
@@ -44,6 +44,34 @@ describe('GET /articles', function () {
             // TODO: add more assertions about the body
         });
     });
+
+    context(`given an XSS attack article`, () => {
+        const { maliciousArticle, sanitizedArticle } = makeMaliciousArticle();
+        // const maliciousArticle = {
+        //     id: 911,
+        //     title: 'Naughty naughty very naughty <script>alert("xss");</script>',
+        //     style: 'How-to',
+        //     content: `Bad image <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.`
+        // };
+
+        beforeEach('insert malicious article', () => {
+            return db
+                .insert(maliciousArticle)
+                .into('blogful_articles');
+        });
+
+        it(`removes XSS attack content`, () => {
+            return supertest(app)
+                .get(`/articles`)
+                .expect(200)
+                .expect(res => {
+                    // expect(res.body[0].title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;');
+                    // expect(res.body[0].content).to.eql(`Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.`);
+                    expect(res.body[0].title).to.eql(sanitizedArticle.title);
+                    expect(res.body[0].content).to.eql(sanitizedArticle.content);
+                });
+        });
+    });
 });
 
 describe('GET /articles/:article_id', () => {
@@ -71,6 +99,33 @@ describe('GET /articles/:article_id', () => {
             return supertest(app)
                 .get(`/articles/${articleId}`)
                 .expect(200, expectedArticle);
+        });
+    });
+
+    context(`given an XSS attack article`, () => {
+        const { maliciousArticle, sanitizedArticle } = makeMaliciousArticle();
+        // const maliciousArticle = {
+        //     id: 911,
+        //     title: 'Naughty naughty very naughty <script>alert("xss");</script>',
+        //     style: 'How-to',
+        //     content: `Bad image <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.`
+        // };
+        beforeEach('insert malicious article', () => {
+            return db
+                .insert(maliciousArticle)
+                .into('blogful_articles');
+        });
+
+        it(`removes XSS attack content`, () => {
+            return supertest(app)
+                .get(`/articles/${maliciousArticle.id}`)
+                .expect(200)
+                .expect(res => {
+                    // expect(res.body.title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;');
+                    // expect(res.body.content).to.eql(`Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.`);
+                    expect(res.body.title).to.eql(sanitizedArticle.title);
+                    expect(res.body.content).to.eql(sanitizedArticle.content);
+                });
         });
     });
 });
@@ -104,7 +159,7 @@ describe('POST /articles', () => {
                     .get(`/articles/${postRes.body.id}`)
                     .expect(postRes.body)
             );
-            // Checkpoint also notes that we coul dhave used knex to check the database directly
+            // Checkpoint also notes that we could have used knex to check the database directly
             // for the POSTed article.
     });
 
@@ -123,6 +178,36 @@ describe('POST /articles', () => {
                 .post('/articles')
                 .send(newArticle)
                 .expect(400, {error: {message: `Missing '${field}' in request body`}});
+        });
+    });
+
+    context(`given an XSS attack article`, () => {
+        const { maliciousArticle, sanitizedArticle } = makeMaliciousArticle();
+        // const maliciousArticle = {
+        //     id: 911,
+        //     title: 'Naughty naughty very naughty <script>alert("xss");</script>',
+        //     style: 'How-to',
+        //     content: `Bad image <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.`
+        // };
+
+        beforeEach('insert malicious article', () => {
+            return db
+                .insert([maliciousArticle])
+                .into('blogful_articles');
+        });
+
+        it(`removes XSS attack content`, () => {
+            return supertest(app)
+                .post(`/articles`)
+                .send(maliciousArticle)
+                .expect(201)
+                .expect(res => {
+                    expect(res.body).to.have.property('id')
+                    // expect(res.body.title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;')
+                    // expect(res.body.content).to.eql(`Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.`);
+                    expect(res.body.title).to.eql(sanitizedArticle.title);
+                    expect(res.body.content).to.eql(sanitizedArticle.content);
+                })
         });
     });
 });

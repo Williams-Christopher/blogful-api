@@ -2,23 +2,32 @@ const express = require('express');
 const ArticlesService = require('./articles-service');
 const articlesRouter = express.Router();
 const jsonParser = express.json();
+const xss = require('xss');
+
+// borrowing from the 'official' drill solution
+// https://github.com/Thinkful-Ed/blogful-api/blob/master/src/articles/articles-router.js
+const serializeArticle = article => ({
+    id: article.id,
+    style: article.style,
+    title: xss(article.title),
+    content: xss(article.content),
+    date_published: article.date_published,
+});
 
 articlesRouter.route('/')
     .get((req, res, next) => {
-        //res.send('All articles');
         const knexInstance = req.app.get('db');
         ArticlesService.getAllArticles(knexInstance)
             .then(articles => {
-                res.json(articles);
+                // const sanitizedArticles = articles.map(function(article) {
+                //     return ({id: article.id, style: article.style, title: xss(article.title), content: xss(article.content), date_published: article.date_published})
+                // });
+                //res.json(sanitizedArticles);
+                res.json(articles.map(serializeArticle))
             })
             .catch(next);
     })
     .post(jsonParser, (req, res, next) => {
-        //res.status(201).send('stuff'); // enough to make the test pass but not what is needed
-        // res.status(201).json({  // Still enough to make the test pass but not what is needed
-        //     ...req.body,        // Write the test to make the POST and then GET /articles/:id
-        //     id: 12              // with the id in the response.
-        // });
         const { title, content, style } = req.body;
         const newArticle = { title, content, style };
 
@@ -33,7 +42,14 @@ articlesRouter.route('/')
                 res
                     .status(201)
                     .location(`/articles/${article.id}`)
-                    .json(article);
+                    // .json({
+                    //     id: article.id,
+                    //     style: article.style,
+                    //     title: xss(article.title),
+                    //     content: xss(article.content),
+                    //     date_published: article.date_published
+                    // });
+                    .json(serializeArticle(article));
             })
             .catch(next);
     });
@@ -46,7 +62,14 @@ articlesRouter.route('/:article_id')
                 if (!article) {
                     return res.status(404).json({ error: { message: `Article doesn't exist` } });
                 };
-                res.json(article);
+                // res.json({
+                //     id: article.id,
+                //     style: article.style,
+                //     title: xss(article.title),
+                //     content: xss(article.content),
+                //     date_published: article.date_published
+                // });
+                res.json(serializeArticle(article));
             })
             .catch(next);
     });
