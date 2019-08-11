@@ -22,7 +22,7 @@ app.use(function errorHandler(error, req, res, next) {
     };
     res.status(500).json(response);
 });
-app.use('/articles', ArticlesRouter);
+app.use('/api/articles', ArticlesRouter);
 
 app.get('/', (req, res) => {
     res.send('Hello, world!');

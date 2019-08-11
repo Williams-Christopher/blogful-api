@@ -9,6 +9,7 @@
     "migrate": "postgrator --config postgrator-config.js",
     "start": "node src/server.js",
     "test": "mocha --require test/setup.js",
+    "test-w": "mocha -w --require test/setup.js",
     "predeploy": "npm audit",
     "deploy": "git push heroku master"
   },

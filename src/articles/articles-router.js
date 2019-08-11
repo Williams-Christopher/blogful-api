@@ -3,6 +3,7 @@ const ArticlesService = require('./articles-service');
 const articlesRouter = express.Router();
 const jsonParser = express.json();
 const xss = require('xss');
+const path = require('path');
 
 // borrowing from the 'official' drill solution
 // https://github.com/Thinkful-Ed/blogful-api/blob/master/src/articles/articles-router.js
@@ -41,7 +42,9 @@ articlesRouter.route('/')
             .then(article => {
                 res
                     .status(201)
-                    .location(`/articles/${article.id}`)
+                    //.location(`/articles/${article.id}`)
+                    //.location(req.originalUrl + `/${article.id}`) // if the original path ends with / this causes a double slash in the response
+                    .location(path.posix.join(req.originalUrl + `/${article.id}`)) // this figures out the double slash issue and constructs a proper path
                     // .json({
                     //     id: article.id,
                     //     style: article.style,
