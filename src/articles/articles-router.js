@@ -67,7 +67,7 @@ articlesRouter.route('/:article_id')
                 res.article = article; // Save the article for the next middleware
                 next(); // call next() so the next middleware happens
             })
-            .catch(next);
+            .catch(err => {console.log(err)});
     })
     .get((req, res, next) => {
         res.json(serializeArticle(res.article));
@@ -79,23 +79,21 @@ articlesRouter.route('/:article_id')
             })
             .catch();
     })
-    // .patch((req, res) => {
-    //     res.status(204).end();
-    // });
     .patch(jsonParser, (req, res, next) => {
         const { title, content, style } = req.body;
         const articleToUpdate = { title, content, style};
-        console.log(articleToUpdate);
 
         const numberOfValues = Object.values(articleToUpdate).filter(Boolean).length;
         if(numberOfValues === 0) {
-            res.status(400).json({error: { message: `Request body must contain 'title', 'style', or 'content`}});
+            return res.status(400).json({error: { message: `Request body must contain 'title', 'style', or 'content`}});
         }
 
         ArticlesService.updateArticle(req.app.get('db'), req.params.article_id ,articleToUpdate)
             .then(numRowsAffected => {
+                console.log('rows: ', numRowsAffected)
                 res.status(204).end();
             })
             .catch(next);
     });
-module.exports = articlesRouter;
+
+    module.exports = articlesRouter;

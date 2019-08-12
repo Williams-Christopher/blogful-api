@@ -8,24 +8,30 @@ const ArticlesRouter = require('./articles/articles-router');
 
 const app = express();
 
-const morganOption = (NODE_ENV === 'production') ? 'tiny' : 'common';
+// const morganOption = (NODE_ENV === 'production') ? 'tiny' : 'common';
 
-app.use(morgan(morganOption));
+// app.use(morgan(morganOption));
+app.use(morgan((NODE_ENV === 'production') ? 'tiny' : 'common', {
+    skip: () => NODE_ENV === 'test'
+  }))
 app.use(cors());
 app.use(helmet());
+
+app.use('/api/articles', ArticlesRouter);
+
+app.get('/', (req, res) => {
+    res.send('Hello, world!');
+});
+
 app.use(function errorHandler(error, req, res, next) {
     let response;
+    console.log(error)
     if (NODE_ENV === 'production') {
         response = { error: { message: 'Server error' } };
     } else {
         response = { error };
     };
     res.status(500).json(response);
-});
-app.use('/api/articles', ArticlesRouter);
-
-app.get('/', (req, res) => {
-    res.send('Hello, world!');
 });
 
 // Serves up an XSS 'attack' demo page
