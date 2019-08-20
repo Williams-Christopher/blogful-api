@@ -1,3 +1,5 @@
+truncate table blogful_articles;
+
 INSERT INTO blogful_articles (title, style, content)
 VALUES
   ('First post!', 'Interview',
