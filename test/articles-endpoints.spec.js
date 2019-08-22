@@ -1,6 +1,7 @@
 const { expect } = require('chai');
 const knex = require('knex');
 const app = require('../src/app');
+const { makeUsersArray } = require('./users.fixtures');
 const { makeArticlesArray, makeMaliciousArticle } = require('./articles.fixtures');
 
 let db;
@@ -14,11 +15,13 @@ before('make knex instance', () => {
     app.set('db', db);
 });
 
-before('clean the table', () => db('blogful_articles').truncate());
+//before('clean the table', () => db('blogful_articles').truncate());
+before ('clean the tables', () => db.raw('TRUNCATE blogful_articles, blogful_users, blogful_comments RESTART IDENTITY CASCADE'));
 
 after('disconnect from db', () => db.destroy());
 
-afterEach('cleanup', () => db('blogful_articles').truncate());
+// afterEach('cleanup', () => db('blogful_articles').truncate());
+afterEach('cleanup', () => db.raw('TRUNCATE blogful_articles, blogful_users, blogful_comments RESTART IDENTITY CASCADE'));
 
 describe('GET /api/articles', function () {
     context('Given no articles', () => {
@@ -31,10 +34,17 @@ describe('GET /api/articles', function () {
 
     context('Given there are articles in the database', () => {
         const testArticles = makeArticlesArray();
-        beforeEach('insert articles', () => {
+        const testUsers = makeUsersArray();
+
+        beforeEach('insert test data', () => {
             return db
-                .into('blogful_articles')
-                .insert(testArticles)
+                .into('blogful_users')
+                .insert(testUsers)
+                .then(() => {
+                    return db
+                        .into('blogful_articles')
+                        .insert(testArticles);
+                });
         });
 
         it('GET /api/articles responds with 200 and all of the articles', () => {
@@ -86,11 +96,17 @@ describe('GET /api/articles/:article_id', () => {
 
     context('Given there are articles in the database', () => {
         const testArticles = makeArticlesArray();
+        const testUsers = makeUsersArray();
 
-        beforeEach('insert articles', () => {
+        beforeEach('insert test data', () => {
             return db
-                .into('blogful_articles')
-                .insert(testArticles);
+                .into('blogful_users')
+                .insert(testUsers)
+                .then(() => {
+                    return db
+                        .into('blogful_articles')
+                        .insert(testArticles);
+                });
         });
 
         it('GET /api/articles/:article_id responds with 200 and the specficied article', () => {
@@ -215,11 +231,17 @@ describe('POST /api/articles', () => {
 describe(`DELETE /api/articles/:article_id`, () => {
     context(`Given there are articles in the database`,() => {
         const testArticles = makeArticlesArray();
+        const testUsers = makeUsersArray();
 
-        beforeEach(`insert articles`, () => {
+        beforeEach('insert test data', () => {
             return db
-                .insert(testArticles)
-                .into('blogful_articles');
+                .into('blogful_users')
+                .insert(testUsers)
+                .then(() => {
+                    return db
+                        .into('blogful_articles')
+                        .insert(testArticles);
+                });
         });
 
         it(`responds with 204 and removes the article`, () => {
@@ -258,10 +280,17 @@ describe(`PATCH /api/articles/:article_id`, () => {
 
     context(`Given there are articles in the database`, () => {
         const testArticles = makeArticlesArray();
-        beforeEach(`insert articles`, () => {
+        const testUsers = makeUsersArray();
+
+        beforeEach('insert test data', () => {
             return db
-                .insert(testArticles)
-                .into('blogful_articles');
+                .into('blogful_users')
+                .insert(testUsers)
+                .then(() => {
+                    return db
+                        .into('blogful_articles')
+                        .insert(testArticles);
+                });
         });
 
         it(`responds with 204 and updates the article`, () => {
